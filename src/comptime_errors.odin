@@ -11,24 +11,12 @@ comptime_errors :: proc(file_data: []byte) {
     height := 0
     max_width := 0
     had_error: bool
-    inside_string: bool
     for c in file_data {
         if c == '\t' do width += 4
         else if c == '\n' {
             if width > max_width do max_width = width
             width = 0
             height += 1
-        }
-        else if c == '\"' {
-            width += 1
-            inside_string = !inside_string
-        }
-        else if c == '\r' || c == '\b' || c == '\v' {
-
-        }
-        else if !unicode.is_digit(rune(c)) && !inside_string && !slice.contains(POSSIBLE_SYMBOLS, c) {
-            fmt.println("Unrecognized symbol", c, strings.clone_from_bytes([]byte{c}, context.temp_allocator))
-            had_error = true
         }
         else do width += 1
     }

@@ -175,8 +175,12 @@ run_program :: proc(_program: [WIDTH][HEIGHT]byte) {
                     else do append(&stack, Stack_Data{})
                 case:
                     s := strings.clone_from_bytes([]byte{c}, context.temp_allocator)
-                    n, _ := strconv.parse_int(s)
-                    append(&stack, Stack_Data{i = n})
+                    n, ok := strconv.parse_int(s)
+                    if ok do append(&stack, Stack_Data{i = n})
+                    else {
+                        fmt.printf("Unknown instruction '%v' used.\n", c)
+                        os.exit(-1)
+                    }
             }
         }
         else {
