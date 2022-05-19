@@ -8,6 +8,7 @@ import "core:strings"
 import "core:strconv"
 import "core:math/rand"
 import "core:math"
+import "core:time"
 //import "core:c/libc"
 
 run_program :: proc(_program: [WIDTH][HEIGHT]byte) {
@@ -156,10 +157,22 @@ run_program :: proc(_program: [WIDTH][HEIGHT]byte) {
                     v := pop(&stack)
                     program[x.i][y.i] = v.b
                 case '&':
-                    //n := libc.scanf("Enter a number.")
-                    //append(&stack, Stack_Data{i = int(n)})
+                    buf := make([]u8, 1024)
+                    defer delete(buf)
+                    input := get_input(buf)
+                    n, ok := strconv.parse_int(input)
+                    if !ok do append(&stack, Stack_Data{i = 0})
+                    else do append(&stack, Stack_Data{i = n})
                 case '~':
-                    
+                    buf := make([]u8, 1024)
+                    defer delete(buf)
+                    input := get_input(buf)
+                    if len(input) > 0 {
+                        for input_character in transmute([]byte)input {
+                            append(&stack, Stack_Data{b = input_character})
+                        }
+                    }
+                    else do append(&stack, Stack_Data{})
                 case:
                     s := strings.clone_from_bytes([]byte{c}, context.temp_allocator)
                     n, _ := strconv.parse_int(s)
@@ -188,4 +201,30 @@ run_program :: proc(_program: [WIDTH][HEIGHT]byte) {
         c = program[x][y]
     }
     fmt.println("\nProgram ended successfully.")
+}
+
+get_input :: proc(buf: []byte) -> string {
+    fmt.println("\nEnter a number.")
+    fmt.printf("> ")
+
+    read_size, read_err := os.read(os.stdin, buf[:])
+
+    // Strip CR/NL
+    input := strings.trim_suffix(string(buf[:read_size]), "\r\n")
+    read_size = len(input)
+
+    // Quit if empty input
+    if read_size == 0 {
+        return {}
+    }
+
+    switch read_err {
+    case 0, 6:
+        return input
+    case:
+        // Error
+        return {}
+    }
+
+    return {}
 }
